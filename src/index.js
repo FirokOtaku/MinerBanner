@@ -1,8 +1,8 @@
 const About = {
 	name: 'Miner Banner',
-	version: '1.0.0',
+	version: '1.1.0',
 	author: 'Firok',
-	isDev: false,
+	isDev: true,
 	banners: [
 		{
 			rid: '32627',
@@ -78,7 +78,7 @@ function resolveIndex()
             src: url("https://cdn.jsdelivr.net/npm/@south-paw/typeface-minecraft@1.0.0/files/minecraft.woff")
         }
         .title { font-family: Monocraft, Microsoft Yahei, 黑体 }
-        body { padding: 12px 0; font-family: Microsoft Yahei, 黑体 }
+        body { background-color: #C6C6C6; padding: 12px 0; font-family: Microsoft Yahei, 黑体 }
         table { font-size: 24px }
         tr > td:first-child { text-align: right; font-weight: bold }
         td { padding: 0 4px }
@@ -199,7 +199,7 @@ function resolveIndex()
             <td class="small">
                 基于 Cloudflare Worker,<br>
                 动态生成 SVG 格式 Minecraft 成就横幅图片<br>
-                查看源码或 API 请访问 <a href="https://github.com/FirokOtaku/MinerBanner">GitHub</a>
+                查看源码或 API 请访问 <a href="https://github.com/FirokOtaku/MinerBanner" target="_blank">GitHub</a>
             </td>
         </tr>
     </table>
@@ -210,27 +210,32 @@ function resolveIndex()
     const inRid = $('in-rid'), inT = $('in-t'), inSt = $('in-st'), inTc = $('in-tc'), inStc = $('in-stc'), inTf = $('in-tf'), inStf = $('in-stf')
     const btnGen = $('btn-gen'), btnCheck = $('btn-check'), outImg = $('out-img')
     btnGen.onclick = () => {
-        let url = 'https://miner-banner.firok.workers.dev/svg?'
+        const params = {}
 
         const rid = inRid.value
-        if(rid !== '' && parseInt(rid) > 0) url += '&rid=' + rid
+        if(rid !== '' && parseInt(rid) > 0) params['rid'] = rid
 
         const t = inT.value.trim()
         if(t !== '')
         {
-            url += '&t=' + t
+            params['t'] = t
             const tc = inTc.value.toLowerCase(), tf = inTf.value.trim()
-            if(tc !== '#fafa00') url += '&tc=' + tc
-            if(tf !== '') url += '&tf=' + tf
+            if(tc !== '#fafa00') params['tc'] = tc
+            if(tf !== '') params['tf'] = tf
         }
         const st = inSt.value.trim()
         if(st !== '')
         {
-            url += '&st=' + st
+            params['st']= st
             const stc = inStc.value.toLowerCase(), stf = inStf.value.trim()
-            if(stc !== '#fefefe') url += '&stc=' + stc
-            if(stf !== '') url += '&stf=' + stf
+            if(stc !== '#fefefe') params['stc'] = stc
+            if(stf !== '') params['stf'] = stf
         }
+        let url = '${About.isDev ? 'http://localhost:8787/svg?' : 'https://miner-banner.firok.workers.dev/svg?'}'
+        for(const key in params)
+		{
+            url += '&' + key + '=' + encodeURIComponent(params[key])
+		}
         outImg.src = url
     }
     btnCheck.onclick = () => {
@@ -241,12 +246,24 @@ function resolveIndex()
 </body>
 </html>`,
 		{
-			headers: { 'Content-Type': 'text/html; charset=utf-8' },
+			headers: {
+				'Content-Type': 'text/html; charset=utf-8',
+				'Cache-Control': 'public, max-age=30',
+			},
 			status: 200,
 		}
 	)
 }
-async function resolveSvg(request, url)
+async function getImage(rid)
+{
+	const rGroup = parseInt('' + (parseInt(rid) / 10000))
+	const res = await fetch(`https://i.mcmod.cn/item/icon/128x128/${rGroup}/${rid}.png?v=9`, { method: 'get' })
+	const resBlob = await res.blob()
+	const resBuffer = await resBlob.arrayBuffer()
+	const resString = String.fromCharCode(...new Uint8Array(resBuffer))
+	return btoa(resString)
+}
+async function resolveSvg(request, url, env)
 {
 	const params = url.searchParams
 	const rid = params.get('rid')
@@ -256,18 +273,25 @@ async function resolveSvg(request, url)
 	let partImage
 	if(rid != null)
 	{
-		const rGroup = parseInt('' + (parseInt(rid) / 10000))
-		try
+		let resB64
+		if(env.mcmodTextures && env.mcmodTextures.get && env.mcmodTextures.put)
 		{
-			console.log(`https://i.mcmod.cn/item/icon/128x128/${rGroup}/${rid}.png?v=9`)
-			const res = await fetch(`https://i.mcmod.cn/item/icon/128x128/${rGroup}/${rid}.png?v=9`, { method: 'get' })
-			const resBlob = await res.blob()
-			const resBuffer = await resBlob.arrayBuffer()
-			const resString = String.fromCharCode(...new Uint8Array(resBuffer))
-			const resB64 = btoa(resString)
-			partImage = `<image xlink:href="data:image/png;base64,${resB64}" x="16" y="16" width="32" height="32"/>`
+			const cacheKey = 'item-' + rid
+			const cache = await env.mcmodTextures.get(cacheKey, { type: "text" })
+			if(cache === null)
+			{
+				try
+				{
+					resB64 = await getImage(rid)
+					await env.mcmodTextures.put(cacheKey, resB64, {expirationTtl: 3600 * 24})
+				}
+				catch (ignored) { }
+			}
+			else resB64 = cache
 		}
-		catch (ignored) { }
+		else resB64 = await getImage(rid)
+
+		partImage = `<image xlink:href="data:image/png;base64,${resB64}" x="16" y="16" width="32" height="32"/>`
 	}
 	else partImage = ''
 
@@ -348,7 +372,11 @@ export default
 
 		if(url.pathname === '/svg')
 		{
-			return await resolveSvg(request, url)
+			return await resolveSvg(request, url, env)
+		}
+		else if(url.pathname === '/favicon.ico')
+		{
+			return new Response(null, { status: 404 })
 		}
 		else
 		{
