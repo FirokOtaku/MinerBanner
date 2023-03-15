@@ -5,3 +5,25 @@ compatibility_date = "2023-03-08"
 kv_namespaces = [
     { binding = "mcmodTextures", id = "c27df8d59d3246e88f7cb582830604d8", preview_id = "b42479b02564478692b793b1b12b8a95" }
 ]
+
+[vars]
+Name = "Miner Banner"
+Author = "Firok"
+RunningVersion = "1.2.0-indev"
+BaseUrl = "http://192.168.30.22:8787"
+
+[env.production]
+
+name = "miner-banner"
+main = "src/index.js"
+compatibility_date = "2023-03-08"
+
+kv_namespaces = [
+    { binding = "mcmodTextures", id = "c27df8d59d3246e88f7cb582830604d8", preview_id = "b42479b02564478692b793b1b12b8a95" }
+]
+
+[env.production.vars]
+Name = "Miner Banner"
+Author = "Firok"
+RunningVersion = "1.2.0"
+BaseUrl = "https://miner-banner.firok.workers.dev"

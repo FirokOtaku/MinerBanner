@@ -1,5 +1,10 @@
 /texture
 /.idea
+/*.png
+/*.svg
+/*.txt
+/*.bat
+*.iml
 
 # Logs
 
