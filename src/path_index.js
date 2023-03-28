@@ -1,4 +1,3 @@
-import {CommonBanners, DatetimeBanners} from "./banners";
 
 function resolveIndex(env)
 {
@@ -172,79 +171,95 @@ function resolveIndex(env)
     </table>
 </div>
 <script>
-    function genBanner(now)
+const DatetimeBanners = [
+    { mon: 11, date: 20, per: 1, rid: '667270', t: '今天的牛杂师傅也元气满满', tc: '#945dc4', st: '免疫 免疫 免疫 免疫', stc: '#939393' },
+    { mon: 3, date: 9, per: 1, rid: '133894', t: '特权', tc: '#39c5bb', st: '一年过两次生日' },
+    { mon: 8, date: 31, per: 1, rid: '133735', t: '未来の歌声、僕らのキセキ', tc: '#39c5bb', st: '我去! 初音未来!' },
+    { day: 4, per: 0.25, rid: '612735', t: 'KFC CRAZY THU', st: 'VW50' },
+    { hour: 15, per: 0.25, rid: '524431', t: '三点几', st: '饮茶先啦!' },
+    { mon: 1, per: 0.25, rid: '134239', t: '温习? 预习!', st: '7天看完3本课本' },
+    { mon: 6, per: 0.25, rid: '134239', t: '温习? 预习!', st: '7天看完3本课本' },
+    { hour: 0, per: 0.15, rid: '52561', t: '熬夜冠军', st: '' },
+    { hour: 1, per: 0.3, rid: '52561', t: '熬夜冠军', st: '' },
+    { hour: 2, per: 0.45, rid: '52561', t: '熬夜冠军', st: '' },
+    { hour: 3, per: 0.6, rid: '52561', t: '熬夜冠军', st: '' },
+    { hour: 4, per: 0.75, rid: '52561', t: '熬夜冠军', st: '' },
+]
+const CommonBanners = [
+    { rid: '32627', title: '老马啊老马', subtitle: '没有薯条的码头, 毫无意义' },
+]
+function genBanner(now)
+{
+    now = now instanceof Date ? now : new Date()
+    const day = now.getUTCDay(), date = now.getUTCDate(), mon = now.getUTCMonth() + 1, hour = now.getHours()
+    for(let DB of DatetimeBanners)
     {
-        const day = now.getUTCDay(), date = now.getUTCDate(), mon = now.getUTCMonth() + 1, hour = now.getHours()
-        const DatetimeBanners = JSON.parse(decodeURIComponent(escape(atob('${DatetimeBanners}'))))
-        const CommonBanners = JSON.parse(decodeURIComponent(escape(atob('${CommonBanners}'))))
-        for(let DB of DatetimeBanners)
-        {
-            if(DB.day === day && Math.random() > DB.per) return DB
-            if(DB.hour === hour && Math.random() > DB.per) return DB
-            if(DB.date === date && DB.mon === mon && Math.random() > DB.per) return DB
-        }
-        return CommonBanners[parseInt('' + (Math.random() * CommonBanners.length))]
+        if(DB.day === day && Math.random() > DB.per) return DB
+        if(DB.hour === hour && Math.random() > DB.per) return DB
+        if(DB.date === date && DB.mon === mon && Math.random() > DB.per) return DB
     }
-    const banner = genBanner(new Date())
-    const $ = id => document.getElementById(id)
-    const inRid = $('in-rid'), inT = $('in-t'), inSt = $('in-st'), inTc = $('in-tc'), inStc = $('in-stc'), inTf = $('in-tf'), inStf = $('in-stf')
-    const btnGen = $('btn-gen'), btnCheck = $('btn-check'), outImg = $('out-img')
-    const btnCopyExplicit = $('btn-copy-explicit'), outHrefExplicit = $('out-href-explicit')
-    const btnCopyImplicit = $('btn-copy-implicit'), outHrefImplicit = $('out-href-implicit')
-    btnGen.onclick = () => {
-        const params = {}
-        const rid = inRid.value
-        if(rid !== '' && parseInt(rid) > 0) params['rid'] = rid
+    return CommonBanners[parseInt('' + (Math.random() * CommonBanners.length))]
+}
+const banner = genBanner()
+const $ = id => document.getElementById(id)
+const inRid = $('in-rid'), inT = $('in-t'), inSt = $('in-st'), inTc = $('in-tc'), inStc = $('in-stc'), inTf = $('in-tf'), inStf = $('in-stf')
+const btnGen = $('btn-gen'), btnCheck = $('btn-check'), outImg = $('out-img')
+const btnCopyExplicit = $('btn-copy-explicit'), outHrefExplicit = $('out-href-explicit')
+const btnCopyImplicit = $('btn-copy-implicit'), outHrefImplicit = $('out-href-implicit')
+btnGen.onclick = () => {
+    const params = {}
+    const rid = inRid.value
+    if(rid !== '' && parseInt(rid) > 0) params['rid'] = rid
 
-        const t = inT.value.trim()
-        if(t !== '')
-        {
-            params['t'] = t
-            const tc = inTc.value.toLowerCase(), tf = inTf.value.trim()
-            if(tc !== '#fafa00') params['tc'] = tc
-            if(tf !== '') params['tf'] = tf
-        }
-        const st = inSt.value.trim()
-        if(st !== '')
-        {
-            params['st']= st
-            const stc = inStc.value.toLowerCase(), stf = inStf.value.trim()
-            if(stc !== '#fefefe') params['stc'] = stc
-            if(stf !== '') params['stf'] = stf
-        }
-        let url = '${env.BaseUrl}' + '/svg_achievement?'
-        for(const key in params)
-        {
-            url += '&' + key + '=' + encodeURIComponent(params[key])
-        }
-        outImg.src = url
-        outImg.alt = t
-        outHrefExplicit.value = url
+    const t = inT.value.trim()
+    if(t !== '')
+    {
+        params['t'] = t
+        const tc = inTc.value.toLowerCase(), tf = inTf.value.trim()
+        if(tc !== '#fafa00') params['tc'] = tc
+        if(tf !== '') params['tf'] = tf
     }
-    btnCheck.onclick = () => window.open('https://www.mcmod.cn/item/' + inRid.value.trim() + '.html')
-    let tsCopy = 0
-    function resetBtnCopyExplicit() { if(btnCopyExplicit.innerText !== '📋' && new Date().getTime() - tsCopy >= 2000) btnCopyExplicit.innerText = '📋' }
-    btnCopyExplicit.onclick = () => {
-        window.navigator.clipboard.writeText(outHrefExplicit.value)
-        .then(() => {
-            tsCopy = new Date().getTime()
-            btnCopyExplicit.innerText = '✔'
-            setTimeout(resetBtnCopyExplicit, 2050)
-        })
-        .catch(() => {
-            tsCopy = new Date().getTime()
-            btnCopyExplicit.innerText = '❌'
-            setTimeout(resetBtnCopyExplicit, 2050)
-        })
+    const st = inSt.value.trim()
+    if(st !== '')
+    {
+        params['st']= st
+        const stc = inStc.value.toLowerCase(), stf = inStf.value.trim()
+        if(stc !== '#fefefe') params['stc'] = stc
+        if(stf !== '') params['stf'] = stf
     }
-    inRid.value = banner?.rid ?? '32627'
-    inT.value = banner?.t ?? '老马啊老马'
-    inTc.value = banner?.tc ?? '#fafa00'
-    inTf.value = banner?.tf ?? 'Microsoft Yahei'
-    inSt.value = banner?.st ?? '没有薯条的码头, 毫无意义'
-    inStc.value = banner?.stc ?? '#fefefe'
-    inStf.value = banner?.stf ?? 'Microsoft Yahei'
-    btnGen.click()
+    let url = '${env.BaseUrl}' + '/svg_achievement?'
+    for(const key in params)
+    {
+        url += '&' + key + '=' + encodeURIComponent(params[key])
+    }
+    outImg.src = url
+    outImg.alt = t
+    outHrefExplicit.value = url
+}
+btnCheck.onclick = () => window.open('https://www.mcmod.cn/item/' + inRid.value.trim() + '.html')
+let tsCopy = 0
+function resetBtnCopyExplicit() { if(btnCopyExplicit.innerText !== '📋' && new Date().getTime() - tsCopy >= 2000) btnCopyExplicit.innerText = '📋' }
+btnCopyExplicit.onclick = () => {
+    window.navigator.clipboard.writeText(outHrefExplicit.value)
+    .then(() => {
+        tsCopy = new Date().getTime()
+        btnCopyExplicit.innerText = '✔'
+        setTimeout(resetBtnCopyExplicit, 2050)
+    })
+    .catch(() => {
+        tsCopy = new Date().getTime()
+        btnCopyExplicit.innerText = '❌'
+        setTimeout(resetBtnCopyExplicit, 2050)
+    })
+}
+inRid.value = banner?.rid ?? '32627'
+inT.value = banner?.t ?? '老马啊老马'
+inTc.value = banner?.tc ?? '#fafa00'
+inTf.value = banner?.tf ?? 'Microsoft Yahei'
+inSt.value = banner?.st ?? '没有薯条的码头, 毫无意义'
+inStc.value = banner?.stc ?? '#fefefe'
+inStf.value = banner?.stf ?? 'Microsoft Yahei'
+btnGen.click()
 </script>
 </body>
 </html>`,

@@ -9,7 +9,7 @@ kv_namespaces = [
 [vars]
 Name = "Miner Banner"
 Author = "Firok"
-RunningVersion = "1.2.0-indev"
+RunningVersion = "1.2.1-indev"
 BaseUrl = "http://192.168.30.22:8787"
 
 [env.production]
@@ -25,5 +25,5 @@ kv_namespaces = [
 [env.production.vars]
 Name = "Miner Banner"
 Author = "Firok"
-RunningVersion = "1.2.0"
+RunningVersion = "1.2.1"
 BaseUrl = "https://miner-banner.firok.workers.dev"
